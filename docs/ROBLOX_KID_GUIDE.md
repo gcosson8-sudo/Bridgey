@@ -27,7 +27,7 @@ You need:
 Then run:
 
 ```bash
-cd /Users/administrator/Desktop/Whisky/Bridgey
+cd /path/to/Bridgey
 ./scripts/make-public.sh bridgey.yourdomain.com
 ```
 
@@ -47,7 +47,7 @@ https://bridgey.yourdomain.com/setup
 If you want the free-no-account version that uses your public IP as a hostname, try:
 
 ```bash
-cd /Users/administrator/Desktop/Whisky/Bridgey
+cd /path/to/Bridgey
 ./scripts/use-sslip-hostname.sh
 ```
 
@@ -58,7 +58,7 @@ If your router is not forwarding ports `80` and `443` to this Mac yet, that scri
 If you want Bridgey to read `example.com`, run:
 
 ```bash
-cd /Users/administrator/Desktop/Whisky/Bridgey
+cd /path/to/Bridgey
 ./scripts/add-allowlist.sh example.com
 ```
 
@@ -70,17 +70,17 @@ Or use the `/setup` page and click the Allowlist tab.
 2. Open your game.
 3. Make a `ModuleScript` in `ServerStorage`.
 4. Name it `Bridgey`.
-5. Open [/Users/administrator/Desktop/Whisky/Bridgey/packages/luau-sdk/src/Bridgey.luau](/Users/administrator/Desktop/Whisky/Bridgey/packages/luau-sdk/src/Bridgey.luau) and copy the whole file into that ModuleScript.
+5. Open [packages/luau-sdk/src/Bridgey.luau](../packages/luau-sdk/src/Bridgey.luau) and copy the whole file into that ModuleScript.
 
 You can also open these ready-made Roblox server scripts:
 
-- [/Users/administrator/Desktop/Whisky/Bridgey/roblox/BridgeyDemo.server.lua](/Users/administrator/Desktop/Whisky/Bridgey/roblox/BridgeyDemo.server.lua)
-- [/Users/administrator/Desktop/Whisky/Bridgey/roblox/BridgeyStatefulDemo.server.lua](/Users/administrator/Desktop/Whisky/Bridgey/roblox/BridgeyStatefulDemo.server.lua)
+- [roblox/BridgeyDemo.server.lua](../roblox/BridgeyDemo.server.lua)
+- [roblox/BridgeyStatefulDemo.server.lua](../roblox/BridgeyStatefulDemo.server.lua)
 
 If you want Bridgey to print the exact snippet with your current URL and API key:
 
 ```bash
-cd /Users/administrator/Desktop/Whisky/Bridgey
+cd /path/to/Bridgey
 ./scripts/print-roblox-snippet.sh
 ```
 
@@ -150,7 +150,7 @@ Important:
 - Check Docker:
 
 ```bash
-cd /Users/administrator/Desktop/Whisky/Bridgey
+cd /path/to/Bridgey
 docker compose ps
 docker compose logs api --tail=100
 docker compose logs caddy --tail=100

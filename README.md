@@ -4,7 +4,7 @@ Bridgey lets Roblox experiences browse allowlisted websites through a controlled
 
 Bridgey also ships with a browser-based setup console at `/setup` for first-time deployment, allowlist management, credential creation, and Roblox copy-paste snippets.
 
-There is also a very simple Roblox publish guide in [docs/ROBLOX_KID_GUIDE.md](/Users/administrator/Desktop/Whisky/Bridgey/docs/ROBLOX_KID_GUIDE.md).
+There is also a very simple Roblox publish guide in [docs/ROBLOX_KID_GUIDE.md](docs/ROBLOX_KID_GUIDE.md).
 
 ## Workspace layout
 
