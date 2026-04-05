@@ -155,6 +155,8 @@ Ready-made Roblox examples:
 
 - `roblox/BridgeyDemo.server.lua`
 - `roblox/BridgeyStatefulDemo.server.lua`
+- `roblox/BridgeyUiServer.server.lua`
+- `roblox/BridgeyUiClient.client.lua`
 
 To print a ready-to-paste Roblox server script using your current Bridgey URL and API key:
 
