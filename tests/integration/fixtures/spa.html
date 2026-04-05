@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Bridgey SPA</title>
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => {
+          const target = document.getElementById("app");
+          if (target) {
+            target.innerHTML = "<section id='hydrated'><h1>Hydrated content</h1><button id='continue'>Continue</button></section>";
+          }
+        }, 150);
+      });
+    </script>
+  </head>
+  <body>
+    <div id="app">Loading...</div>
+  </body>
+</html>
+

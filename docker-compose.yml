@@ -1,0 +1,72 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      DATABASE_URL: postgres://bridgey:bridgey@postgres:5432/bridgey
+      BRIDGEY_MASTER_KEY: ${BRIDGEY_MASTER_KEY:-replace-with-32-byte-base64-value}
+      BRIDGEY_API_KEYS: ${BRIDGEY_API_KEYS:-roblox-dev-key}
+      BRIDGEY_ADMIN_KEYS: ${BRIDGEY_ADMIN_KEYS:-bridgey-admin-key}
+      BRIDGEY_SESSION_TTL_MS: ${BRIDGEY_SESSION_TTL_MS:-900000}
+      BRIDGEY_MAX_SESSIONS: ${BRIDGEY_MAX_SESSIONS:-50}
+    expose:
+      - "3000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+    shm_size: "1gb"
+
+  caddy:
+    image: caddy:2-alpine
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      BRIDGEY_SITE_ADDRESS: ${BRIDGEY_SITE_ADDRESS:-:80}
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: unless-stopped
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: bridgey
+      POSTGRES_USER: bridgey
+      POSTGRES_PASSWORD: bridgey
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bridgey -d bridgey"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "127.0.0.1:5432:5432"
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  caddy-config:
+  caddy-data:
+  postgres-data:

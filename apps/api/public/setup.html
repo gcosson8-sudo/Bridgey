@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bridgey Setup Console</title>
+    <link rel="stylesheet" href="/assets/setup.css" />
+  </head>
+  <body>
+    <div class="desktop-glow" aria-hidden="true"></div>
+    <main class="window-shell">
+      <section class="window-frame">
+        <header class="titlebar">
+          <div class="traffic-lights" aria-hidden="true">
+            <span class="traffic traffic-close"></span>
+            <span class="traffic traffic-minimize"></span>
+            <span class="traffic traffic-zoom"></span>
+          </div>
+          <div class="title-block">
+            <p class="eyebrow">Bridgey</p>
+            <h1>Setup Console</h1>
+          </div>
+          <div class="title-meta">
+            <span class="badge">Roblox</span>
+            <span class="badge">Playwright</span>
+            <span class="badge">Postgres</span>
+          </div>
+        </header>
+
+        <div class="toolbar">
+          <div class="segmented">
+            <button class="segment is-active" type="button" data-section-target="setup-section">Setup</button>
+            <button class="segment" type="button" data-section-target="allowlist-section">Allowlist</button>
+            <button class="segment" type="button" data-section-target="credentials-section">Credentials</button>
+            <button class="segment" type="button" data-section-target="roblox-section">Roblox</button>
+          </div>
+          <div class="toolbar-status">
+            <span class="status-pill" id="api-health-pill">Checking API...</span>
+          </div>
+        </div>
+
+        <div class="window-body">
+          <aside class="sidebar">
+            <section class="sidebar-group">
+              <p class="sidebar-label">Connection</p>
+              <label class="field-stack" for="admin-key">
+                <span>Admin key</span>
+                <input id="admin-key" name="admin-key" type="password" placeholder="x-bridgey-admin-key" autocomplete="off" />
+              </label>
+              <div class="stack-inline">
+                <button id="connect-admin" class="aqua-button" type="button">Connect</button>
+                <button id="refresh-state" class="chrome-button" type="button">Refresh</button>
+              </div>
+              <p class="fine-print">The key stays only in this page session and is sent as a request header.</p>
+            </section>
+
+            <nav class="source-list" aria-label="Console sections">
+              <button class="source-item is-selected" type="button" data-section-target="setup-section">
+                <span class="source-dot source-blue"></span>
+                <span>Deploy</span>
+              </button>
+              <button class="source-item" type="button" data-section-target="allowlist-section">
+                <span class="source-dot source-graphite"></span>
+                <span>Allowlist</span>
+              </button>
+              <button class="source-item" type="button" data-section-target="credentials-section">
+                <span class="source-dot source-green"></span>
+                <span>Credentials</span>
+              </button>
+              <button class="source-item" type="button" data-section-target="roblox-section">
+                <span class="source-dot source-orange"></span>
+                <span>Roblox</span>
+              </button>
+            </nav>
+
+            <section class="sidebar-group">
+              <p class="sidebar-label">Runtime</p>
+              <dl class="stat-list">
+                <div>
+                  <dt>Origin</dt>
+                  <dd id="runtime-origin">-</dd>
+                </div>
+                <div>
+                  <dt>TTL</dt>
+                  <dd id="runtime-ttl">-</dd>
+                </div>
+                <div>
+                  <dt>Max sessions</dt>
+                  <dd id="runtime-max-sessions">-</dd>
+                </div>
+                <div>
+                  <dt>Domains</dt>
+                  <dd id="runtime-domain-count">-</dd>
+                </div>
+              </dl>
+            </section>
+          </aside>
+
+          <section class="content">
+            <section id="setup-section" class="panel-section is-visible">
+              <div class="hero-panel">
+                <div>
+                  <p class="eyebrow">Bringup</p>
+                  <h2>One-host deployment</h2>
+                  <p class="lede">
+                    Bridgey runs as one API node with local Playwright sessions, one Postgres instance, and an HTTPS proxy in front.
+                  </p>
+                </div>
+                <div class="hero-window">
+                  <div class="hero-window-bar"></div>
+                  <pre class="command-block"><code id="deploy-command">docker compose up -d --build</code></pre>
+                </div>
+              </div>
+
+              <div class="panel-grid">
+                <article class="chrome-panel">
+                  <div class="panel-head">
+                    <h3>1. Environment</h3>
+                    <span class="panel-chip">Required</span>
+                  </div>
+                  <ol class="step-list">
+                    <li>Copy <code>.env.example</code> to <code>.env</code>.</li>
+                    <li>Set <code>BRIDGEY_MASTER_KEY</code> to a 32-byte base64 key.</li>
+                    <li>Set <code>BRIDGEY_API_KEYS</code> and <code>BRIDGEY_ADMIN_KEYS</code> to strong random values.</li>
+                    <li>Set <code>BRIDGEY_SITE_ADDRESS</code> to <code>:80</code> for local HTTP or your public domain for HTTPS.</li>
+                  </ol>
+                </article>
+
+                <article class="chrome-panel">
+                  <div class="panel-head">
+                    <h3>2. Start the stack</h3>
+                    <span class="panel-chip">Compose</span>
+                  </div>
+                  <pre class="command-block"><code>docker compose up -d --build</code></pre>
+                  <p class="fine-print">Caddy listens on ports 80 and 443. The API remains internal on port 3000.</p>
+                </article>
+
+                <article class="chrome-panel">
+                  <div class="panel-head">
+                    <h3>3. Allowlist your first domain</h3>
+                    <span class="panel-chip">Admin</span>
+                  </div>
+                  <pre class="command-block"><code id="allowlist-command">curl -X POST http://localhost/admin/allowlist \
+  -H 'content-type: application/json' \
+  -H 'x-bridgey-admin-key: YOUR_ADMIN_KEY' \
+  -d '{"action":"add","domain":"example.com"}'</code></pre>
+                </article>
+
+                <article class="chrome-panel">
+                  <div class="panel-head">
+                    <h3>Health</h3>
+                    <span class="panel-chip" id="health-chip">Pending</span>
+                  </div>
+                  <p class="status-line" id="health-copy">Waiting for a health check.</p>
+                </article>
+              </div>
+            </section>
+
+            <section id="allowlist-section" class="panel-section">
+              <div class="section-header">
+                <div>
+                  <p class="eyebrow">Access policy</p>
+                  <h2>Allowlist domains</h2>
+                </div>
+                <button id="reload-allowlist" class="chrome-button" type="button">Reload</button>
+              </div>
+
+              <div class="panel-grid two-column">
+                <form id="allowlist-form" class="chrome-panel form-panel">
+                  <div class="panel-head">
+                    <h3>Mutate allowlist</h3>
+                  </div>
+                  <label class="field-stack" for="allowlist-domain">
+                    <span>Domain</span>
+                    <input id="allowlist-domain" name="domain" type="text" placeholder="example.com" required />
+                  </label>
+                  <div class="stack-inline">
+                    <button class="aqua-button" type="submit" name="action" value="add">Add domain</button>
+                    <button class="chrome-button" type="submit" name="action" value="remove">Remove domain</button>
+                  </div>
+                  <p class="fine-print">Subdomains are allowed when the parent domain is allowlisted.</p>
+                </form>
+
+                <article class="chrome-panel">
+                  <div class="panel-head">
+                    <h3>Current domains</h3>
+                    <span class="panel-chip" id="allowlist-count">0</span>
+                  </div>
+                  <ul id="allowlist-list" class="domain-list"></ul>
+                </article>
+              </div>
+            </section>
+
+            <section id="credentials-section" class="panel-section">
+              <div class="section-header">
+                <div>
+                  <p class="eyebrow">Vault</p>
+                  <h2>Create site credentials</h2>
+                </div>
+              </div>
+
+              <div class="panel-grid two-column">
+                <form id="credential-form" class="chrome-panel form-panel">
+                  <div class="panel-head">
+                    <h3>New credential</h3>
+                    <span class="panel-chip">Encrypted at rest</span>
+                  </div>
+                  <label class="field-stack" for="credential-label">
+                    <span>Label</span>
+                    <input id="credential-label" name="label" type="text" placeholder="Example login" required />
+                  </label>
+                  <label class="field-stack" for="credential-domains">
+                    <span>Allowed domains</span>
+                    <input id="credential-domains" name="allowedDomains" type="text" placeholder="example.com, login.example.com" required />
+                  </label>
+                  <label class="field-stack" for="credential-username">
+                    <span>Username</span>
+                    <input id="credential-username" name="username" type="text" placeholder="bridgey" />
+                  </label>
+                  <label class="field-stack" for="credential-password">
+                    <span>Password</span>
+                    <input id="credential-password" name="password" type="password" placeholder="secret" />
+                  </label>
+                  <label class="field-stack" for="credential-extras">
+                    <span>Extras JSON</span>
+                    <textarea id="credential-extras" name="extras" rows="5" placeholder='{"otp_seed":"abc123"}'></textarea>
+                  </label>
+                  <button class="aqua-button" type="submit">Create credential</button>
+                </form>
+
+                <article class="chrome-panel">
+                  <div class="panel-head">
+                    <h3>Latest result</h3>
+                    <span class="panel-chip" id="credential-status-chip">Idle</span>
+                  </div>
+                  <pre class="command-block"><code id="credential-result">No credential created yet.</code></pre>
+                </article>
+              </div>
+            </section>
+
+            <section id="roblox-section" class="panel-section">
+              <div class="section-header">
+                <div>
+                  <p class="eyebrow">Client</p>
+                  <h2>Roblox wiring</h2>
+                </div>
+              </div>
+
+              <div class="panel-grid">
+                <article class="chrome-panel">
+                  <div class="panel-head">
+                    <h3>ModuleScript snippet</h3>
+                    <span class="panel-chip">Luau</span>
+                  </div>
+                  <pre class="command-block"><code id="roblox-snippet"></code></pre>
+                </article>
+
+                <article class="chrome-panel">
+                  <div class="panel-head">
+                    <h3>What to do next</h3>
+                    <span class="panel-chip">Checklist</span>
+                  </div>
+                  <ol class="step-list">
+                    <li>Require <code>Bridgey.luau</code> in a Roblox <code>ModuleScript</code>.</li>
+                    <li>Point <code>baseUrl</code> at this Bridgey host.</li>
+                    <li>Use the experience API key, not the admin key.</li>
+                    <li>Run a <code>navigate</code> action to an allowlisted domain.</li>
+                    <li>Use the returned <code>snapshot</code> instead of parsing raw HTML in Luau.</li>
+                  </ol>
+                </article>
+              </div>
+            </section>
+
+            <section class="console-strip">
+              <div class="console-head">
+                <span class="console-led"></span>
+                <h3>Console</h3>
+              </div>
+              <pre id="console-output" class="console-output">Bridgey setup console ready.</pre>
+            </section>
+          </section>
+        </div>
+      </section>
+    </main>
+    <script src="/assets/setup.js" type="module"></script>
+  </body>
+</html>
+

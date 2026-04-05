@@ -1,0 +1,4 @@
+{$BRIDGEY_SITE_ADDRESS} {
+	encode gzip zstd
+	reverse_proxy api:3000
+}
