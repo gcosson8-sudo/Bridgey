@@ -33,6 +33,10 @@ main() {
   require_command openssl
   require_command curl
 
+  # GitHub Codespaces can expose an older Docker Engine API than the client
+  # packaged in the devcontainer image. Pinning this keeps compose usable.
+  export DOCKER_API_VERSION="${DOCKER_API_VERSION:-1.43}"
+
   local master_key
   local api_key
   local admin_key
