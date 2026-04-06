@@ -266,7 +266,7 @@ describeIntegration("BrowserSessionManager integration", () => {
       manager.runActions(session.sessionId, [
         {
           type: "navigate",
-          url: "https://example.com"
+          url: "https://not-allowlisted.invalid"
         }
       ])
     ).rejects.toMatchObject({

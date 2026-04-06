@@ -461,6 +461,12 @@ export class BrowserSessionManager {
     }
 
     if (error instanceof errors.TimeoutError) {
+      if (action.type !== "navigate") {
+        return new BridgeyError("invalid_selector", 400, "Element was not found before timeout", {
+          action
+        });
+      }
+
       return new BridgeyError("navigation_timeout", 504, "Browser action timed out", {
         action
       });
