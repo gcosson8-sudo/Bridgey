@@ -87,7 +87,22 @@ const defaultRenderInfo: RenderInfo = {
   computedStyle: defaultComputedStyle
 };
 
-export const domNodeSchema = z.lazy(() =>
+export interface DomNode {
+  id: string;
+  tag: string;
+  attributes: Record<string, string>;
+  text: string | null;
+  interactiveHints: InteractiveHints;
+  render: RenderInfo;
+  children: DomNode[];
+}
+
+type DomNodeInput = Omit<DomNode, "render" | "children"> & {
+  render?: RenderInfo;
+  children: DomNodeInput[];
+};
+
+export const domNodeSchema: z.ZodType<DomNode, z.ZodTypeDef, DomNodeInput> = z.lazy(() =>
   z.object({
     id: z.string(),
     tag: z.string(),
@@ -98,8 +113,6 @@ export const domNodeSchema = z.lazy(() =>
     children: z.array(domNodeSchema)
   })
 );
-
-export type DomNode = z.infer<typeof domNodeSchema>;
 
 export const linkSchema = z.object({
   text: z.string(),
