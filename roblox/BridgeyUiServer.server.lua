@@ -21,10 +21,35 @@ if event == nil then
 	event.Parent = ReplicatedStorage
 end
 
-local client = Bridgey.new({
-	baseUrl = BRIDGEY_BASE_URL,
-	apiKey = BRIDGEY_API_KEY,
-})
+local function sendError(player, message)
+	event:FireClient(player, {
+		kind = "error",
+		title = "Bridgey error",
+		message = message,
+	})
+end
+
+local function ensureConfigured(player)
+	if BRIDGEY_BASE_URL == "REPLACE_WITH_BRIDGEY_URL" then
+		sendError(
+			player,
+			"BridgeyUiServer.server.lua is not configured yet.\n\n" ..
+			"Set BRIDGEY_BASE_URL to your Bridgey server URL."
+		)
+		return false
+	end
+
+	if BRIDGEY_API_KEY == "REPLACE_WITH_EXPERIENCE_API_KEY" then
+		sendError(
+			player,
+			"BridgeyUiServer.server.lua is not configured yet.\n\n" ..
+			"Set BRIDGEY_API_KEY to your Bridgey experience API key."
+		)
+		return false
+	end
+
+	return true
+end
 
 local function buildBodyText(snapshot)
 	local lines = {}
@@ -49,9 +74,18 @@ local function buildBodyText(snapshot)
 end
 
 local function sendSnapshot(player)
+	if not ensureConfigured(player) then
+		return
+	end
+
 	event:FireClient(player, {
 		kind = "status",
 		message = "Loading page...",
+	})
+
+	local client = Bridgey.new({
+		baseUrl = BRIDGEY_BASE_URL,
+		apiKey = BRIDGEY_API_KEY,
 	})
 
 	local ok, result = client:fetchOnce({
@@ -77,11 +111,10 @@ local function sendSnapshot(player)
 		return
 	end
 
-	event:FireClient(player, {
-		kind = "error",
-		title = "Bridgey error",
-		message = string.format("%s: %s", tostring(result.code), tostring(result.message)),
-	})
+	sendError(
+		player,
+		string.format("%s: %s", tostring(result.code), tostring(result.message))
+	)
 end
 
 event.OnServerEvent:Connect(function(player, action)

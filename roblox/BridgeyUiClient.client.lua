@@ -8,14 +8,17 @@ local playerGui = player:WaitForChild("PlayerGui")
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "BridgeyUi"
+screenGui.DisplayOrder = 50
+screenGui.IgnoreGuiInset = true
 screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = playerGui
 
 local frame = Instance.new("Frame")
 frame.Name = "Window"
 frame.AnchorPoint = Vector2.new(0.5, 0.5)
 frame.Position = UDim2.fromScale(0.5, 0.5)
-frame.Size = UDim2.fromOffset(720, 460)
+frame.Size = UDim2.fromOffset(760, 500)
 frame.BackgroundColor3 = Color3.fromRGB(242, 244, 247)
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
@@ -30,14 +33,14 @@ frameStroke.Parent = frame
 
 local topBar = Instance.new("Frame")
 topBar.Name = "TopBar"
-topBar.Size = UDim2.new(1, 0, 0, 60)
+topBar.Size = UDim2.new(1, 0, 0, 64)
 topBar.BackgroundColor3 = Color3.fromRGB(228, 232, 238)
 topBar.BorderSizePixel = 0
 topBar.Parent = frame
 
-local topCorner = Instance.new("UICorner")
-topCorner.CornerRadius = UDim.new(0, 14)
-topCorner.Parent = topBar
+local topBarCorner = Instance.new("UICorner")
+topBarCorner.CornerRadius = UDim.new(0, 14)
+topBarCorner.Parent = topBar
 
 local topMask = Instance.new("Frame")
 topMask.AnchorPoint = Vector2.new(0, 1)
@@ -55,20 +58,22 @@ titleLabel.Size = UDim2.new(1, -170, 0, 24)
 titleLabel.Font = Enum.Font.BuilderSansBold
 titleLabel.Text = "Bridgey Browser"
 titleLabel.TextColor3 = Color3.fromRGB(34, 39, 46)
-titleLabel.TextSize = 20
+titleLabel.TextSize = 21
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.ZIndex = 2
 titleLabel.Parent = topBar
 
 local subtitleLabel = Instance.new("TextLabel")
 subtitleLabel.Name = "Subtitle"
 subtitleLabel.BackgroundTransparency = 1
-subtitleLabel.Position = UDim2.fromOffset(20, 33)
+subtitleLabel.Position = UDim2.fromOffset(20, 36)
 subtitleLabel.Size = UDim2.new(1, -170, 0, 16)
 subtitleLabel.Font = Enum.Font.BuilderSans
-subtitleLabel.Text = "Waiting for server..."
+subtitleLabel.Text = "Connecting to Bridgey..."
 subtitleLabel.TextColor3 = Color3.fromRGB(92, 102, 115)
 subtitleLabel.TextSize = 12
 subtitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+subtitleLabel.ZIndex = 2
 subtitleLabel.Parent = topBar
 
 local refreshButton = Instance.new("TextButton")
@@ -83,6 +88,7 @@ refreshButton.Font = Enum.Font.BuilderSansBold
 refreshButton.Text = "Refresh"
 refreshButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 refreshButton.TextSize = 14
+refreshButton.ZIndex = 2
 refreshButton.Parent = topBar
 
 local refreshCorner = Instance.new("UICorner")
@@ -91,12 +97,14 @@ refreshCorner.Parent = refreshButton
 
 local bodyFrame = Instance.new("ScrollingFrame")
 bodyFrame.Name = "Body"
-bodyFrame.Position = UDim2.fromOffset(16, 76)
-bodyFrame.Size = UDim2.new(1, -32, 1, -92)
+bodyFrame.Position = UDim2.fromOffset(16, 80)
+bodyFrame.Size = UDim2.new(1, -32, 1, -96)
+bodyFrame.AutomaticCanvasSize = Enum.AutomaticSize.None
 bodyFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 bodyFrame.BorderSizePixel = 0
 bodyFrame.CanvasSize = UDim2.fromOffset(0, 0)
 bodyFrame.ScrollBarThickness = 8
+bodyFrame.ScrollingDirection = Enum.ScrollingDirection.Y
 bodyFrame.Parent = frame
 
 local bodyCorner = Instance.new("UICorner")
@@ -120,32 +128,76 @@ contentLayout.Padding = UDim.new(0, 12)
 contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 contentLayout.Parent = contentFrame
 
-local urlLabel = Instance.new("TextLabel")
-urlLabel.Name = "Url"
-urlLabel.LayoutOrder = 1
-urlLabel.Size = UDim2.new(1, 0, 0, 36)
-urlLabel.BackgroundColor3 = Color3.fromRGB(244, 247, 251)
-urlLabel.BorderSizePixel = 0
-urlLabel.Font = Enum.Font.BuilderSans
-urlLabel.Text = "Waiting for page..."
-urlLabel.TextColor3 = Color3.fromRGB(92, 102, 115)
-urlLabel.TextSize = 14
-urlLabel.TextWrapped = true
-urlLabel.TextXAlignment = Enum.TextXAlignment.Left
-urlLabel.Parent = contentFrame
+local statusCard = Instance.new("Frame")
+statusCard.Name = "StatusCard"
+statusCard.LayoutOrder = 1
+statusCard.Size = UDim2.new(1, 0, 0, 48)
+statusCard.BackgroundColor3 = Color3.fromRGB(244, 247, 251)
+statusCard.BorderSizePixel = 0
+statusCard.Parent = contentFrame
 
-local urlCorner = Instance.new("UICorner")
-urlCorner.CornerRadius = UDim.new(0, 8)
-urlCorner.Parent = urlLabel
+local statusCardCorner = Instance.new("UICorner")
+statusCardCorner.CornerRadius = UDim.new(0, 8)
+statusCardCorner.Parent = statusCard
+
+local statusPadding = Instance.new("UIPadding")
+statusPadding.PaddingLeft = UDim.new(0, 12)
+statusPadding.PaddingRight = UDim.new(0, 12)
+statusPadding.PaddingTop = UDim.new(0, 8)
+statusPadding.PaddingBottom = UDim.new(0, 8)
+statusPadding.Parent = statusCard
+
+local statusTitle = Instance.new("TextLabel")
+statusTitle.Name = "StatusTitle"
+statusTitle.BackgroundTransparency = 1
+statusTitle.Size = UDim2.new(1, 0, 0, 14)
+statusTitle.Font = Enum.Font.BuilderSansBold
+statusTitle.Text = "Status"
+statusTitle.TextColor3 = Color3.fromRGB(42, 47, 53)
+statusTitle.TextSize = 14
+statusTitle.TextXAlignment = Enum.TextXAlignment.Left
+statusTitle.Parent = statusCard
+
+local statusValue = Instance.new("TextLabel")
+statusValue.Name = "StatusValue"
+statusValue.BackgroundTransparency = 1
+statusValue.Position = UDim2.fromOffset(0, 18)
+statusValue.Size = UDim2.new(1, 0, 0, 16)
+statusValue.Font = Enum.Font.BuilderSans
+statusValue.Text = "Starting UI..."
+statusValue.TextColor3 = Color3.fromRGB(92, 102, 115)
+statusValue.TextSize = 13
+statusValue.TextWrapped = true
+statusValue.TextXAlignment = Enum.TextXAlignment.Left
+statusValue.Parent = statusCard
+
+local urlCard = Instance.new("TextLabel")
+urlCard.Name = "Url"
+urlCard.LayoutOrder = 2
+urlCard.Size = UDim2.new(1, 0, 0, 44)
+urlCard.BackgroundColor3 = Color3.fromRGB(244, 247, 251)
+urlCard.BorderSizePixel = 0
+urlCard.Font = Enum.Font.BuilderSans
+urlCard.Text = "Waiting for page..."
+urlCard.TextColor3 = Color3.fromRGB(92, 102, 115)
+urlCard.TextSize = 14
+urlCard.TextWrapped = true
+urlCard.TextXAlignment = Enum.TextXAlignment.Left
+urlCard.TextYAlignment = Enum.TextYAlignment.Center
+urlCard.Parent = contentFrame
+
+local urlCardCorner = Instance.new("UICorner")
+urlCardCorner.CornerRadius = UDim.new(0, 8)
+urlCardCorner.Parent = urlCard
 
 local urlPadding = Instance.new("UIPadding")
 urlPadding.PaddingLeft = UDim.new(0, 12)
 urlPadding.PaddingRight = UDim.new(0, 12)
-urlPadding.Parent = urlLabel
+urlPadding.Parent = urlCard
 
 local sectionLabel = Instance.new("TextLabel")
 sectionLabel.Name = "Section"
-sectionLabel.LayoutOrder = 2
+sectionLabel.LayoutOrder = 3
 sectionLabel.BackgroundTransparency = 1
 sectionLabel.Size = UDim2.new(1, 0, 0, 20)
 sectionLabel.Font = Enum.Font.BuilderSansBold
@@ -157,12 +209,12 @@ sectionLabel.Parent = contentFrame
 
 local textLabel = Instance.new("TextLabel")
 textLabel.Name = "Text"
-textLabel.LayoutOrder = 3
+textLabel.LayoutOrder = 4
 textLabel.BackgroundTransparency = 1
 textLabel.Size = UDim2.new(1, 0, 0, 0)
 textLabel.AutomaticSize = Enum.AutomaticSize.Y
 textLabel.Font = Enum.Font.Code
-textLabel.Text = "Connecting to Bridgey..."
+textLabel.Text = "Waiting for the server script to create BridgeyUiEvent..."
 textLabel.TextColor3 = Color3.fromRGB(37, 41, 47)
 textLabel.TextSize = 16
 textLabel.TextWrapped = true
@@ -185,16 +237,21 @@ local function setLoadingState(isLoading)
 		else Color3.fromRGB(37, 99, 235)
 end
 
-local function showError(message: string)
+local function setStatus(message)
+	statusValue.Text = message
+	subtitleLabel.Text = message
+end
+
+local function showError(message)
 	setLoadingState(false)
 	titleLabel.Text = "Bridgey error"
-	subtitleLabel.Text = "Request failed"
-	urlLabel.Text = "Bridgey request failed"
+	setStatus("Request failed")
+	urlCard.Text = "Bridgey request failed"
 	textLabel.Text = message
 	updateCanvas()
 end
 
-local event: RemoteEvent? = nil
+local event = nil
 
 local function requestRefresh()
 	if event == nil then
@@ -227,12 +284,20 @@ task.spawn(function()
 	end
 
 	event = found
+	setStatus("Asking server for page...")
+	textLabel.Text = "Waiting for Bridgey response..."
+	updateCanvas()
 
 	event.OnClientEvent:Connect(function(payload)
+		if type(payload) ~= "table" then
+			showError("Bridgey sent an invalid payload.")
+			return
+		end
+
 		if payload.kind == "status" then
 			setLoadingState(true)
-			subtitleLabel.Text = payload.message or "Loading page..."
-			urlLabel.Text = "Waiting for page..."
+			setStatus(payload.message or "Loading page...")
+			urlCard.Text = "Waiting for page..."
 			textLabel.Text = ""
 			updateCanvas()
 			return
@@ -242,8 +307,8 @@ task.spawn(function()
 
 		if payload.kind == "snapshot" then
 			titleLabel.Text = payload.title or "Bridgey Browser"
-			subtitleLabel.Text = "Snapshot loaded"
-			urlLabel.Text = payload.url or ""
+			setStatus("Snapshot loaded")
+			urlCard.Text = payload.url or ""
 			textLabel.Text = payload.bodyText or ""
 			updateCanvas()
 			return
@@ -251,16 +316,16 @@ task.spawn(function()
 
 		if payload.kind == "error" then
 			titleLabel.Text = payload.title or "Bridgey error"
-			subtitleLabel.Text = "Request failed"
-			urlLabel.Text = "Bridgey request failed"
+			setStatus("Request failed")
+			urlCard.Text = "Bridgey request failed"
 			textLabel.Text = payload.message or "Unknown error"
 			updateCanvas()
+			return
 		end
+
+		showError("Bridgey sent an unknown message kind.")
 	end)
 
-	subtitleLabel.Text = "Asking server for page..."
-	textLabel.Text = "Waiting for Bridgey response..."
-	updateCanvas()
 	requestRefresh()
 end)
 
