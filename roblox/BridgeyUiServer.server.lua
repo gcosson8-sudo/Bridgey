@@ -1,8 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
-local Bridgey = require(ServerStorage.Bridgey)
-
 local EVENT_NAME = "BridgeyUiEvent"
 local BRIDGEY_BASE_URL = "REPLACE_WITH_BRIDGEY_URL"
 local BRIDGEY_API_KEY = "REPLACE_WITH_EXPERIENCE_API_KEY"
@@ -21,6 +19,27 @@ if event == nil then
 	event.Parent = ReplicatedStorage
 end
 
+local Bridgey = nil
+local bridgeyLoadError = nil
+
+local bridgeyModule = ServerStorage:FindFirstChild("Bridgey")
+
+if bridgeyModule == nil then
+	bridgeyLoadError =
+		"ServerStorage.Bridgey was not found.\n\n" ..
+		"Create a ModuleScript named Bridgey inside ServerStorage and paste Bridgey.luau into it."
+else
+	local ok, result = pcall(require, bridgeyModule)
+
+	if ok then
+		Bridgey = result
+	else
+		bridgeyLoadError =
+			"The Bridgey ModuleScript failed to load.\n\n" ..
+			tostring(result)
+	end
+end
+
 local function sendError(player, message)
 	event:FireClient(player, {
 		kind = "error",
@@ -30,6 +49,11 @@ local function sendError(player, message)
 end
 
 local function ensureConfigured(player)
+	if bridgeyLoadError ~= nil then
+		sendError(player, bridgeyLoadError)
+		return false
+	end
+
 	if BRIDGEY_BASE_URL == "REPLACE_WITH_BRIDGEY_URL" then
 		sendError(
 			player,
