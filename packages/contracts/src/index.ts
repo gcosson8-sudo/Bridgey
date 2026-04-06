@@ -98,7 +98,7 @@ export interface DomNode {
 }
 
 type DomNodeInput = Omit<DomNode, "render" | "children"> & {
-  render?: RenderInfo;
+  render?: RenderInfo | undefined;
   children: DomNodeInput[];
 };
 
