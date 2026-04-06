@@ -105,7 +105,12 @@ function Bridgey._request(self: Client, method: string, path: string, body: any?
 end
 
 function Bridgey.createSession(self: Client, ttlMs: number?): (boolean, any)
-	local payload: any = if ttlMs then { ttlMs = ttlMs } else {}
+	local payload: any = nil
+
+	if ttlMs ~= nil then
+		payload = { ttlMs = ttlMs }
+	end
+
 	return self:_request("POST", "/sessions", payload)
 end
 
