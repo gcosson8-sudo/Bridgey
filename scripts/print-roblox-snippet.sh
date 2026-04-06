@@ -33,10 +33,10 @@ fi
 
 cat <<EOF
 ModuleScript source:
-  /Users/administrator/Desktop/Whisky/Bridgey/packages/luau-sdk/src/Bridgey.luau
+  packages/luau-sdk/src/Bridgey.luau
 
 Recommended demo script:
-  /Users/administrator/Desktop/Whisky/Bridgey/roblox/BridgeyDemo.server.lua
+  roblox/BridgeyDemo.server.lua
 
 Paste this into a Script in ServerScriptService:
 
