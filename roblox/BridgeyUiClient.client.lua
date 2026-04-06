@@ -5,7 +5,6 @@ local EVENT_NAME = "BridgeyUiEvent"
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
-local event = ReplicatedStorage:WaitForChild(EVENT_NAME)
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "BridgeyUi"
@@ -66,7 +65,7 @@ subtitleLabel.BackgroundTransparency = 1
 subtitleLabel.Position = UDim2.fromOffset(20, 33)
 subtitleLabel.Size = UDim2.new(1, -170, 0, 16)
 subtitleLabel.Font = Enum.Font.BuilderSans
-subtitleLabel.Text = "Waiting for page..."
+subtitleLabel.Text = "Waiting for server..."
 subtitleLabel.TextColor3 = Color3.fromRGB(92, 102, 115)
 subtitleLabel.TextSize = 12
 subtitleLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -163,7 +162,7 @@ textLabel.BackgroundTransparency = 1
 textLabel.Size = UDim2.new(1, 0, 0, 0)
 textLabel.AutomaticSize = Enum.AutomaticSize.Y
 textLabel.Font = Enum.Font.Code
-textLabel.Text = "Loading..."
+textLabel.Text = "Connecting to Bridgey..."
 textLabel.TextColor3 = Color3.fromRGB(37, 41, 47)
 textLabel.TextSize = 16
 textLabel.TextWrapped = true
@@ -186,39 +185,83 @@ local function setLoadingState(isLoading)
 		else Color3.fromRGB(37, 99, 235)
 end
 
-event.OnClientEvent:Connect(function(payload)
-	if payload.kind == "status" then
-		setLoadingState(true)
-		subtitleLabel.Text = payload.message or "Loading page..."
-		urlLabel.Text = "Waiting for page..."
-		textLabel.Text = ""
-		updateCanvas()
-		return
-	end
-
+local function showError(message: string)
 	setLoadingState(false)
+	titleLabel.Text = "Bridgey error"
+	subtitleLabel.Text = "Request failed"
+	urlLabel.Text = "Bridgey request failed"
+	textLabel.Text = message
+	updateCanvas()
+end
 
-	if payload.kind == "snapshot" then
-		titleLabel.Text = payload.title or "Bridgey Browser"
-		subtitleLabel.Text = "Snapshot loaded"
-		urlLabel.Text = payload.url or ""
-		textLabel.Text = payload.bodyText or ""
-		updateCanvas()
+local event: RemoteEvent? = nil
+
+local function requestRefresh()
+	if event == nil then
+		showError(
+			"BridgeyUiEvent was not found in ReplicatedStorage.\n\n" ..
+			"Make sure the server script is a normal Script inside ServerScriptService."
+		)
 		return
 	end
 
-	if payload.kind == "error" then
-		titleLabel.Text = payload.title or "Bridgey error"
-		subtitleLabel.Text = "Request failed"
-		urlLabel.Text = "Bridgey request failed"
-		textLabel.Text = payload.message or "Unknown error"
-		updateCanvas()
-	end
-end)
-
-refreshButton.MouseButton1Click:Connect(function()
 	event:FireServer("refresh")
+end
+
+refreshButton.MouseButton1Click:Connect(requestRefresh)
+
+task.spawn(function()
+	local found = ReplicatedStorage:WaitForChild(EVENT_NAME, 15)
+
+	if found == nil then
+		showError(
+			"BridgeyUiEvent never appeared.\n\n" ..
+			"The server script is missing, disabled, in the wrong place, or crashed."
+		)
+		return
+	end
+
+	if not found:IsA("RemoteEvent") then
+		showError("BridgeyUiEvent exists, but it is not a RemoteEvent.")
+		return
+	end
+
+	event = found
+
+	event.OnClientEvent:Connect(function(payload)
+		if payload.kind == "status" then
+			setLoadingState(true)
+			subtitleLabel.Text = payload.message or "Loading page..."
+			urlLabel.Text = "Waiting for page..."
+			textLabel.Text = ""
+			updateCanvas()
+			return
+		end
+
+		setLoadingState(false)
+
+		if payload.kind == "snapshot" then
+			titleLabel.Text = payload.title or "Bridgey Browser"
+			subtitleLabel.Text = "Snapshot loaded"
+			urlLabel.Text = payload.url or ""
+			textLabel.Text = payload.bodyText or ""
+			updateCanvas()
+			return
+		end
+
+		if payload.kind == "error" then
+			titleLabel.Text = payload.title or "Bridgey error"
+			subtitleLabel.Text = "Request failed"
+			urlLabel.Text = "Bridgey request failed"
+			textLabel.Text = payload.message or "Unknown error"
+			updateCanvas()
+		end
+	end)
+
+	subtitleLabel.Text = "Asking server for page..."
+	textLabel.Text = "Waiting for Bridgey response..."
+	updateCanvas()
+	requestRefresh()
 end)
 
 updateCanvas()
-event:FireServer("refresh")
