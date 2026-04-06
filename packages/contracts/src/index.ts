@@ -25,6 +25,68 @@ export const interactiveHintsSchema = z.object({
 
 export type InteractiveHints = z.infer<typeof interactiveHintsSchema>;
 
+export const layoutBoxSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+  width: z.number(),
+  height: z.number()
+});
+
+export type LayoutBox = z.infer<typeof layoutBoxSchema>;
+
+export const computedStyleSchema = z.object({
+  display: z.string(),
+  visibility: z.string(),
+  position: z.string(),
+  color: z.string().nullish(),
+  backgroundColor: z.string().nullish(),
+  fontSize: z.string().nullish(),
+  fontWeight: z.string().nullish(),
+  textAlign: z.string().nullish(),
+  opacity: z.string().nullish(),
+  zIndex: z.string().nullish(),
+  overflowX: z.string().nullish(),
+  overflowY: z.string().nullish()
+});
+
+export type ComputedStyle = z.infer<typeof computedStyleSchema>;
+
+const defaultLayoutBox: LayoutBox = {
+  x: 0,
+  y: 0,
+  width: 0,
+  height: 0
+};
+
+const defaultComputedStyle: ComputedStyle = {
+  display: "",
+  visibility: "",
+  position: "",
+  color: null,
+  backgroundColor: null,
+  fontSize: null,
+  fontWeight: null,
+  textAlign: null,
+  opacity: null,
+  zIndex: null,
+  overflowX: null,
+  overflowY: null
+};
+
+export const renderInfoSchema = z.object({
+  visible: z.boolean(),
+  layout: layoutBoxSchema,
+  computedStyle: computedStyleSchema
+});
+
+export type RenderInfo = z.infer<typeof renderInfoSchema>;
+
+const defaultRenderInfo: RenderInfo = {
+  visible: false,
+  layout: defaultLayoutBox,
+  computedStyle: defaultComputedStyle
+};
+
 export const domNodeSchema: z.ZodType<DomNode> = z.lazy(() =>
   z.object({
     id: z.string(),
@@ -32,6 +94,7 @@ export const domNodeSchema: z.ZodType<DomNode> = z.lazy(() =>
     attributes: z.record(z.string()),
     text: z.string().nullable(),
     interactiveHints: interactiveHintsSchema,
+    render: renderInfoSchema.default(defaultRenderInfo),
     children: z.array(domNodeSchema)
   })
 );
@@ -42,6 +105,7 @@ export interface DomNode {
   attributes: Record<string, string>;
   text: string | null;
   interactiveHints: InteractiveHints;
+  render: RenderInfo;
   children: DomNode[];
 }
 
@@ -90,6 +154,64 @@ export const documentMetadataSchema = z.object({
 
 export type DocumentMetadata = z.infer<typeof documentMetadataSchema>;
 
+export const scriptAssetSchema = z.object({
+  src: z.string().nullish(),
+  type: z.string().nullish(),
+  async: z.boolean(),
+  defer: z.boolean(),
+  module: z.boolean(),
+  inline: z.boolean(),
+  textLength: z.number().int().min(0)
+});
+
+export type ScriptAsset = z.infer<typeof scriptAssetSchema>;
+
+export const stylesheetAssetSchema = z.object({
+  href: z.string().nullish(),
+  media: z.string().nullish(),
+  disabled: z.boolean(),
+  inline: z.boolean(),
+  ruleCount: z.number().int().min(0).nullable()
+});
+
+export type StylesheetAsset = z.infer<typeof stylesheetAssetSchema>;
+
+export const viewportSchema = z.object({
+  width: z.number(),
+  height: z.number(),
+  scrollX: z.number(),
+  scrollY: z.number(),
+  devicePixelRatio: z.number()
+});
+
+export type ViewportRecord = z.infer<typeof viewportSchema>;
+
+const defaultViewport: ViewportRecord = {
+  width: 0,
+  height: 0,
+  scrollX: 0,
+  scrollY: 0,
+  devicePixelRatio: 1
+};
+
+export const documentRuntimeSchema = z.object({
+  javascriptExecuted: z.boolean(),
+  stylesApplied: z.boolean(),
+  viewport: viewportSchema,
+  scripts: z.array(scriptAssetSchema),
+  stylesheets: z.array(stylesheetAssetSchema)
+});
+
+export type DocumentRuntime = z.infer<typeof documentRuntimeSchema>;
+
+const defaultDocumentRuntime: DocumentRuntime = {
+  javascriptExecuted: true,
+  stylesApplied: true,
+  viewport: defaultViewport,
+  scripts: [],
+  stylesheets: []
+};
+
 export const documentSnapshotSchema = z.object({
   url: z.string().url(),
   title: z.string(),
@@ -99,6 +221,7 @@ export const documentSnapshotSchema = z.object({
   links: z.array(linkSchema),
   forms: z.array(formSchema),
   textBlocks: z.array(textBlockSchema),
+  runtime: documentRuntimeSchema.default(defaultDocumentRuntime),
   timestamp: z.string().datetime()
 });
 

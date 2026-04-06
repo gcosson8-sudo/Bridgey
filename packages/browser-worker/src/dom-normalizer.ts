@@ -1,10 +1,14 @@
 import {
   documentSnapshotSchema,
   type DocumentMetadata,
-  type DocumentSnapshot,
+  type DocumentRuntime,
   type DomNode,
+  type DocumentSnapshot,
   type FormRecord,
   type LinkRecord,
+  type RenderInfo,
+  type ScriptAsset,
+  type StylesheetAsset,
   type TextBlock
 } from "@bridgey/contracts";
 import type { Page } from "playwright";
@@ -16,6 +20,7 @@ interface SnapshotExtraction {
   links: LinkRecord[];
   forms: FormRecord[];
   textBlocks: TextBlock[];
+  runtime: DocumentRuntime;
 }
 
 interface SnapshotOptions {
@@ -91,6 +96,43 @@ export async function captureDocumentSnapshot(
       return attributes;
     };
 
+    const roundLayoutValue = (value: number): number => Math.round(value * 100) / 100;
+
+    const buildRenderInfo = (element: Element): RenderInfo => {
+      const rect = element.getBoundingClientRect();
+      const style = window.getComputedStyle(element);
+      const visible =
+        style.display !== "none" &&
+        style.visibility !== "hidden" &&
+        style.opacity !== "0" &&
+        rect.width > 0 &&
+        rect.height > 0;
+
+      return {
+        visible,
+        layout: {
+          x: roundLayoutValue(rect.left + window.scrollX),
+          y: roundLayoutValue(rect.top + window.scrollY),
+          width: roundLayoutValue(rect.width),
+          height: roundLayoutValue(rect.height)
+        },
+        computedStyle: {
+          display: style.display,
+          visibility: style.visibility,
+          position: style.position,
+          color: style.color || null,
+          backgroundColor: style.backgroundColor || null,
+          fontSize: style.fontSize || null,
+          fontWeight: style.fontWeight || null,
+          textAlign: style.textAlign || null,
+          opacity: style.opacity || null,
+          zIndex: style.zIndex || null,
+          overflowX: style.overflowX || null,
+          overflowY: style.overflowY || null
+        }
+      };
+    };
+
     const toDomNode = (element: Element, depth: number): DomNode => {
       nodeCount += 1;
 
@@ -126,6 +168,7 @@ export async function captureDocumentSnapshot(
           href: element.getAttribute("href"),
           inputType
         },
+        render: buildRenderInfo(element),
         children
       };
     };
@@ -165,6 +208,39 @@ export async function captureDocumentSnapshot(
       }))
       .filter((entry) => entry.text.length > 0)
       .slice(0, MAX_TEXT_BLOCKS);
+    const scripts: ScriptAsset[] = Array.from(document.scripts)
+      .slice(0, 100)
+      .map((script) => ({
+        src: script.src || null,
+        type: script.type || null,
+        async: script.async,
+        defer: script.defer,
+        module: script.type === "module",
+        inline: !script.src,
+        textLength: script.textContent?.length ?? 0
+      }));
+    const stylesheets: StylesheetAsset[] = Array.from(document.styleSheets)
+      .slice(0, 100)
+      .map((sheet) => {
+        const ownerNode = sheet.ownerNode;
+        const ownerElement = ownerNode instanceof Element ? ownerNode : null;
+        const href = "href" in sheet ? sheet.href : null;
+        let ruleCount: number | null = null;
+
+        try {
+          ruleCount = sheet.cssRules.length;
+        } catch {
+          ruleCount = null;
+        }
+
+        return {
+          href: href || null,
+          media: ownerElement?.getAttribute("media") || null,
+          disabled: "disabled" in sheet ? Boolean(sheet.disabled) : false,
+          inline: !href,
+          ruleCount
+        };
+      });
 
     return {
       title: document.title,
@@ -178,7 +254,20 @@ export async function captureDocumentSnapshot(
       dom,
       links,
       forms,
-      textBlocks
+      textBlocks,
+      runtime: {
+        javascriptExecuted: true,
+        stylesApplied: true,
+        viewport: {
+          width: window.innerWidth,
+          height: window.innerHeight,
+          scrollX: window.scrollX,
+          scrollY: window.scrollY,
+          devicePixelRatio: window.devicePixelRatio || 1
+        },
+        scripts,
+        stylesheets
+      }
     };
   });
 
@@ -194,6 +283,7 @@ export async function captureDocumentSnapshot(
     links: extraction.links,
     forms: extraction.forms,
     textBlocks: extraction.textBlocks,
+    runtime: extraction.runtime,
     timestamp: new Date().toISOString()
   });
 }

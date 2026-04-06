@@ -3,6 +3,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { URLSearchParams } from "node:url";
 
 import { BrowserSessionManager, CredentialVault, PostgresBridgeyStore } from "@bridgey/browser-worker";
+import type { DomNode } from "@bridgey/contracts";
 import { beforeAll, afterAll, describe, expect, it } from "vitest";
 import { Pool } from "pg";
 
@@ -19,6 +20,22 @@ function sendHtml(response: ServerResponse, body: string): void {
     "content-type": "text/html; charset=utf-8"
   });
   response.end(body);
+}
+
+function findDomNodeById(node: DomNode, id: string): DomNode | null {
+  if (node.id === id) {
+    return node;
+  }
+
+  for (const child of node.children) {
+    const match = findDomNodeById(child, id);
+
+    if (match) {
+      return match;
+    }
+  }
+
+  return null;
 }
 
 describeIntegration("BrowserSessionManager integration", () => {
@@ -187,6 +204,17 @@ describeIntegration("BrowserSessionManager integration", () => {
     expect(result.snapshot.textBlocks.some((block) => block.text.includes("Hydrated content"))).toBe(
       true
     );
+    expect(result.snapshot.runtime.javascriptExecuted).toBe(true);
+    expect(result.snapshot.runtime.stylesApplied).toBe(true);
+    expect(result.snapshot.runtime.scripts.length).toBeGreaterThan(0);
+    expect(result.snapshot.runtime.stylesheets.length).toBeGreaterThan(0);
+
+    const hydratedNode = findDomNodeById(result.snapshot.dom, "#hydrated");
+
+    expect(hydratedNode).not.toBeNull();
+    expect(hydratedNode?.render.visible).toBe(true);
+    expect(hydratedNode?.render.computedStyle.display).toBe("grid");
+    expect(hydratedNode?.render.layout.width ?? 0).toBeGreaterThan(0);
   });
 
   it("persists cookies across calls and supports credential-backed typing", async () => {
@@ -269,4 +297,3 @@ describeIntegration("BrowserSessionManager integration", () => {
     });
   });
 });
-
