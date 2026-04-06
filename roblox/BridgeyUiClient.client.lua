@@ -4,33 +4,34 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local EVENT_NAME = "BridgeyUiEvent"
 
 local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
 local event = ReplicatedStorage:WaitForChild(EVENT_NAME)
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "BridgeyUi"
 screenGui.ResetOnSpawn = false
-screenGui.Parent = player:WaitForChild("PlayerGui")
+screenGui.Parent = playerGui
 
 local frame = Instance.new("Frame")
 frame.Name = "Window"
 frame.AnchorPoint = Vector2.new(0.5, 0.5)
 frame.Position = UDim2.fromScale(0.5, 0.5)
-frame.Size = UDim2.fromOffset(680, 420)
+frame.Size = UDim2.fromOffset(720, 460)
 frame.BackgroundColor3 = Color3.fromRGB(242, 244, 247)
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 14)
-corner.Parent = frame
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 14)
+frameCorner.Parent = frame
 
-local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(195, 200, 208)
-stroke.Parent = frame
+local frameStroke = Instance.new("UIStroke")
+frameStroke.Color = Color3.fromRGB(195, 200, 208)
+frameStroke.Parent = frame
 
 local topBar = Instance.new("Frame")
 topBar.Name = "TopBar"
-topBar.Size = UDim2.new(1, 0, 0, 48)
+topBar.Size = UDim2.new(1, 0, 0, 60)
 topBar.BackgroundColor3 = Color3.fromRGB(228, 232, 238)
 topBar.BorderSizePixel = 0
 topBar.Parent = frame
@@ -39,11 +40,19 @@ local topCorner = Instance.new("UICorner")
 topCorner.CornerRadius = UDim.new(0, 14)
 topCorner.Parent = topBar
 
+local topMask = Instance.new("Frame")
+topMask.AnchorPoint = Vector2.new(0, 1)
+topMask.Position = UDim2.fromScale(0, 1)
+topMask.Size = UDim2.new(1, 0, 0, 14)
+topMask.BackgroundColor3 = topBar.BackgroundColor3
+topMask.BorderSizePixel = 0
+topMask.Parent = topBar
+
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Name = "Title"
 titleLabel.BackgroundTransparency = 1
-titleLabel.Position = UDim2.fromOffset(18, 10)
-titleLabel.Size = UDim2.new(1, -160, 0, 28)
+titleLabel.Position = UDim2.fromOffset(20, 10)
+titleLabel.Size = UDim2.new(1, -170, 0, 24)
 titleLabel.Font = Enum.Font.BuilderSansBold
 titleLabel.Text = "Bridgey Browser"
 titleLabel.TextColor3 = Color3.fromRGB(34, 39, 46)
@@ -54,8 +63,8 @@ titleLabel.Parent = topBar
 local subtitleLabel = Instance.new("TextLabel")
 subtitleLabel.Name = "Subtitle"
 subtitleLabel.BackgroundTransparency = 1
-subtitleLabel.Position = UDim2.fromOffset(18, 28)
-subtitleLabel.Size = UDim2.new(1, -160, 0, 16)
+subtitleLabel.Position = UDim2.fromOffset(20, 33)
+subtitleLabel.Size = UDim2.new(1, -170, 0, 16)
 subtitleLabel.Font = Enum.Font.BuilderSans
 subtitleLabel.Text = "Waiting for page..."
 subtitleLabel.TextColor3 = Color3.fromRGB(92, 102, 115)
@@ -66,8 +75,8 @@ subtitleLabel.Parent = topBar
 local refreshButton = Instance.new("TextButton")
 refreshButton.Name = "Refresh"
 refreshButton.AnchorPoint = Vector2.new(1, 0.5)
-refreshButton.Position = UDim2.new(1, -16, 0.5, 0)
-refreshButton.Size = UDim2.fromOffset(110, 30)
+refreshButton.Position = UDim2.new(1, -18, 0.5, 0)
+refreshButton.Size = UDim2.fromOffset(110, 32)
 refreshButton.AutoButtonColor = true
 refreshButton.BackgroundColor3 = Color3.fromRGB(37, 99, 235)
 refreshButton.BorderSizePixel = 0
@@ -81,44 +90,93 @@ local refreshCorner = Instance.new("UICorner")
 refreshCorner.CornerRadius = UDim.new(0, 8)
 refreshCorner.Parent = refreshButton
 
-local scrollingFrame = Instance.new("ScrollingFrame")
-scrollingFrame.Name = "Body"
-scrollingFrame.Position = UDim2.fromOffset(16, 64)
-scrollingFrame.Size = UDim2.new(1, -32, 1, -80)
-scrollingFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-scrollingFrame.BorderSizePixel = 0
-scrollingFrame.CanvasSize = UDim2.fromOffset(0, 0)
-scrollingFrame.ScrollBarThickness = 8
-scrollingFrame.Parent = frame
+local bodyFrame = Instance.new("ScrollingFrame")
+bodyFrame.Name = "Body"
+bodyFrame.Position = UDim2.fromOffset(16, 76)
+bodyFrame.Size = UDim2.new(1, -32, 1, -92)
+bodyFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+bodyFrame.BorderSizePixel = 0
+bodyFrame.CanvasSize = UDim2.fromOffset(0, 0)
+bodyFrame.ScrollBarThickness = 8
+bodyFrame.Parent = frame
 
 local bodyCorner = Instance.new("UICorner")
 bodyCorner.CornerRadius = UDim.new(0, 10)
-bodyCorner.Parent = scrollingFrame
+bodyCorner.Parent = bodyFrame
 
 local bodyStroke = Instance.new("UIStroke")
 bodyStroke.Color = Color3.fromRGB(224, 228, 234)
-bodyStroke.Parent = scrollingFrame
+bodyStroke.Parent = bodyFrame
 
-local bodyLabel = Instance.new("TextLabel")
-bodyLabel.Name = "Text"
-bodyLabel.BackgroundTransparency = 1
-bodyLabel.Position = UDim2.fromOffset(14, 14)
-bodyLabel.Size = UDim2.new(1, -28, 0, 0)
-bodyLabel.AutomaticSize = Enum.AutomaticSize.Y
-bodyLabel.Font = Enum.Font.Code
-bodyLabel.Text = "Press Refresh to load a page."
-bodyLabel.TextColor3 = Color3.fromRGB(37, 41, 47)
-bodyLabel.TextSize = 16
-bodyLabel.TextWrapped = true
-bodyLabel.TextXAlignment = Enum.TextXAlignment.Left
-bodyLabel.TextYAlignment = Enum.TextYAlignment.Top
-bodyLabel.Parent = scrollingFrame
+local contentFrame = Instance.new("Frame")
+contentFrame.Name = "Content"
+contentFrame.BackgroundTransparency = 1
+contentFrame.Position = UDim2.fromOffset(18, 18)
+contentFrame.Size = UDim2.new(1, -36, 0, 0)
+contentFrame.AutomaticSize = Enum.AutomaticSize.Y
+contentFrame.Parent = bodyFrame
+
+local contentLayout = Instance.new("UIListLayout")
+contentLayout.Padding = UDim.new(0, 12)
+contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+contentLayout.Parent = contentFrame
+
+local urlLabel = Instance.new("TextLabel")
+urlLabel.Name = "Url"
+urlLabel.LayoutOrder = 1
+urlLabel.Size = UDim2.new(1, 0, 0, 36)
+urlLabel.BackgroundColor3 = Color3.fromRGB(244, 247, 251)
+urlLabel.BorderSizePixel = 0
+urlLabel.Font = Enum.Font.BuilderSans
+urlLabel.Text = "Waiting for page..."
+urlLabel.TextColor3 = Color3.fromRGB(92, 102, 115)
+urlLabel.TextSize = 14
+urlLabel.TextWrapped = true
+urlLabel.TextXAlignment = Enum.TextXAlignment.Left
+urlLabel.Parent = contentFrame
+
+local urlCorner = Instance.new("UICorner")
+urlCorner.CornerRadius = UDim.new(0, 8)
+urlCorner.Parent = urlLabel
+
+local urlPadding = Instance.new("UIPadding")
+urlPadding.PaddingLeft = UDim.new(0, 12)
+urlPadding.PaddingRight = UDim.new(0, 12)
+urlPadding.Parent = urlLabel
+
+local sectionLabel = Instance.new("TextLabel")
+sectionLabel.Name = "Section"
+sectionLabel.LayoutOrder = 2
+sectionLabel.BackgroundTransparency = 1
+sectionLabel.Size = UDim2.new(1, 0, 0, 20)
+sectionLabel.Font = Enum.Font.BuilderSansBold
+sectionLabel.Text = "Page text"
+sectionLabel.TextColor3 = Color3.fromRGB(42, 47, 53)
+sectionLabel.TextSize = 15
+sectionLabel.TextXAlignment = Enum.TextXAlignment.Left
+sectionLabel.Parent = contentFrame
+
+local textLabel = Instance.new("TextLabel")
+textLabel.Name = "Text"
+textLabel.LayoutOrder = 3
+textLabel.BackgroundTransparency = 1
+textLabel.Size = UDim2.new(1, 0, 0, 0)
+textLabel.AutomaticSize = Enum.AutomaticSize.Y
+textLabel.Font = Enum.Font.Code
+textLabel.Text = "Loading..."
+textLabel.TextColor3 = Color3.fromRGB(37, 41, 47)
+textLabel.TextSize = 16
+textLabel.TextWrapped = true
+textLabel.TextXAlignment = Enum.TextXAlignment.Left
+textLabel.TextYAlignment = Enum.TextYAlignment.Top
+textLabel.Parent = contentFrame
 
 local function updateCanvas()
-	scrollingFrame.CanvasSize = UDim2.fromOffset(0, bodyLabel.AbsoluteSize.Y + 28)
+	bodyFrame.CanvasSize = UDim2.fromOffset(0, contentFrame.AbsoluteSize.Y + 36)
 end
 
-bodyLabel:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateCanvas)
+contentFrame:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateCanvas)
+textLabel:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateCanvas)
 
 local function setLoadingState(isLoading)
 	refreshButton.Active = not isLoading
@@ -132,7 +190,8 @@ event.OnClientEvent:Connect(function(payload)
 	if payload.kind == "status" then
 		setLoadingState(true)
 		subtitleLabel.Text = payload.message or "Loading page..."
-		bodyLabel.Text = ""
+		urlLabel.Text = "Waiting for page..."
+		textLabel.Text = ""
 		updateCanvas()
 		return
 	end
@@ -141,8 +200,9 @@ event.OnClientEvent:Connect(function(payload)
 
 	if payload.kind == "snapshot" then
 		titleLabel.Text = payload.title or "Bridgey Browser"
-		subtitleLabel.Text = payload.url or ""
-		bodyLabel.Text = payload.bodyText or ""
+		subtitleLabel.Text = "Snapshot loaded"
+		urlLabel.Text = payload.url or ""
+		textLabel.Text = payload.bodyText or ""
 		updateCanvas()
 		return
 	end
@@ -150,7 +210,8 @@ event.OnClientEvent:Connect(function(payload)
 	if payload.kind == "error" then
 		titleLabel.Text = payload.title or "Bridgey error"
 		subtitleLabel.Text = "Request failed"
-		bodyLabel.Text = payload.message or "Unknown error"
+		urlLabel.Text = "Bridgey request failed"
+		textLabel.Text = payload.message or "Unknown error"
 		updateCanvas()
 	end
 end)
@@ -159,4 +220,5 @@ refreshButton.MouseButton1Click:Connect(function()
 	event:FireServer("refresh")
 end)
 
+updateCanvas()
 event:FireServer("refresh")
