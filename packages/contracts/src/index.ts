@@ -105,7 +105,7 @@ export interface DomNode {
   attributes: Record<string, string>;
   text: string | null;
   interactiveHints: InteractiveHints;
-  render: RenderInfo;
+  render?: RenderInfo;
   children: DomNode[];
 }
 

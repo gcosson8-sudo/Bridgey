@@ -81,7 +81,7 @@ describe("shared contracts", () => {
     expect(parsed.runtime.javascriptExecuted).toBe(true);
     expect(parsed.runtime.stylesApplied).toBe(true);
     expect(parsed.runtime.scripts).toEqual([]);
-    expect(parsed.dom.render.visible).toBe(false);
-    expect(parsed.dom.render.layout.width).toBe(0);
+    expect(parsed.dom.render?.visible).toBe(false);
+    expect(parsed.dom.render?.layout.width).toBe(0);
   });
 });

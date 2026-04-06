@@ -212,9 +212,9 @@ describeIntegration("BrowserSessionManager integration", () => {
     const hydratedNode = findDomNodeById(result.snapshot.dom, "#hydrated");
 
     expect(hydratedNode).not.toBeNull();
-    expect(hydratedNode?.render.visible).toBe(true);
-    expect(hydratedNode?.render.computedStyle.display).toBe("grid");
-    expect(hydratedNode?.render.layout.width ?? 0).toBeGreaterThan(0);
+    expect(hydratedNode?.render?.visible).toBe(true);
+    expect(hydratedNode?.render?.computedStyle.display).toBe("grid");
+    expect(hydratedNode?.render?.layout.width ?? 0).toBeGreaterThan(0);
   });
 
   it("persists cookies across calls and supports credential-backed typing", async () => {
