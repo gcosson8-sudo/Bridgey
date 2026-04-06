@@ -66,6 +66,20 @@ function requireAdminKey(config: BridgeyConfig) {
   };
 }
 
+function normalizeCreateSessionBody(body: unknown): unknown {
+  if (body == null) {
+    return {};
+  }
+
+  // Roblox HttpService can serialize an empty Luau table as [], so treat an
+  // empty array like an omitted create-session body.
+  if (Array.isArray(body) && body.length === 0) {
+    return {};
+  }
+
+  return body;
+}
+
 export async function buildApp(services: AppServices): Promise<FastifyInstance> {
   const app = Fastify({
     logger: true
@@ -140,7 +154,7 @@ export async function buildApp(services: AppServices): Promise<FastifyInstance> 
       preHandler: apiGuard
     },
     async (request) => {
-      const body = createSessionRequestSchema.parse(request.body ?? {});
+      const body = createSessionRequestSchema.parse(normalizeCreateSessionBody(request.body));
       return services.manager.createSession(body.ttlMs);
     }
   );
