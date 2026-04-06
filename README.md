@@ -99,12 +99,23 @@ You can also do the same work in the setup console:
 
 - `POST /sessions`
 - `POST /sessions/:id/actions`
+- `POST /sessions/:id/screenshot`
 - `GET /sessions/:id/document`
 - `DELETE /sessions/:id`
 - `POST /admin/credentials`
 - `POST /admin/allowlist`
 
 All session routes require `x-bridgey-api-key`. Admin routes require `x-bridgey-admin-key`.
+
+Supported action types:
+
+- `navigate`
+- `click`
+- `click_point` using viewport CSS pixel coordinates
+- `type`
+- `submit`
+- `wait_for_selector`
+- `scroll`
 
 ## Example action batch
 
@@ -145,6 +156,7 @@ All session routes require `x-bridgey-api-key`. Admin routes require `x-bridgey-
 - `Bridgey.new`
 - `client:createSession`
 - `client:runActions`
+- `client:captureScreenshot`
 - `client:getDocument`
 - `client:closeSession`
 - `client:fetchOnce`

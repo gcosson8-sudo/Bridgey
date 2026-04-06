@@ -12,6 +12,8 @@ import {
 } from "@bridgey/browser-worker";
 import {
   allowlistMutationRequestSchema,
+  captureScreenshotRequestSchema,
+  captureScreenshotResponseSchema,
   closeSessionResponseSchema,
   createCredentialRequestSchema,
   createCredentialResponseSchema,
@@ -19,6 +21,7 @@ import {
   getDocumentResponseSchema,
   runActionsRequestSchema,
   type AllowlistMutationResponse,
+  type CaptureScreenshotResponse,
   type CloseSessionResponse
 } from "@bridgey/contracts";
 import fastifyStatic from "@fastify/static";
@@ -66,13 +69,13 @@ function requireAdminKey(config: BridgeyConfig) {
   };
 }
 
-function normalizeCreateSessionBody(body: unknown): unknown {
+function normalizeOptionalObjectBody(body: unknown): unknown {
   if (body == null) {
     return {};
   }
 
   // Roblox HttpService can serialize an empty Luau table as [], so treat an
-  // empty array like an omitted create-session body.
+  // empty array like an omitted object body.
   if (Array.isArray(body) && body.length === 0) {
     return {};
   }
@@ -154,7 +157,7 @@ export async function buildApp(services: AppServices): Promise<FastifyInstance> 
       preHandler: apiGuard
     },
     async (request) => {
-      const body = createSessionRequestSchema.parse(normalizeCreateSessionBody(request.body));
+      const body = createSessionRequestSchema.parse(normalizeOptionalObjectBody(request.body));
       return services.manager.createSession(body.ttlMs);
     }
   );
@@ -180,6 +183,20 @@ export async function buildApp(services: AppServices): Promise<FastifyInstance> 
       const params = request.params as { id: string };
       const response = await services.manager.getDocument(params.id);
       return getDocumentResponseSchema.parse(response);
+    }
+  );
+
+  app.post(
+    "/sessions/:id/screenshot",
+    {
+      preHandler: apiGuard
+    },
+    async (request) => {
+      const params = request.params as { id: string };
+      const body = captureScreenshotRequestSchema.parse(normalizeOptionalObjectBody(request.body));
+      const response = await services.manager.captureScreenshot(params.id, body);
+
+      return captureScreenshotResponseSchema.parse(response satisfies CaptureScreenshotResponse);
     }
   );
 

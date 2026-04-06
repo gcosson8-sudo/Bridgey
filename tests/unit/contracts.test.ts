@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   actionSchema,
+  captureScreenshotRequestSchema,
   documentSnapshotSchema,
   runActionsRequestSchema,
   typeActionSchema
@@ -38,11 +39,47 @@ describe("shared contracts", () => {
         {
           type: "navigate",
           url: "https://example.com"
+        },
+        {
+          type: "click_point",
+          x: 120,
+          y: 90
+        },
+        {
+          type: "scroll",
+          deltaY: 250
         }
       ]
     });
 
-    expect(parsed.actions).toHaveLength(1);
+    expect(parsed.actions).toHaveLength(3);
+  });
+
+  it("validates screenshot capture requests", () => {
+    expect(
+      captureScreenshotRequestSchema.parse({
+        format: "jpeg",
+        quality: 80,
+        clip: {
+          x: 10,
+          y: 20,
+          width: 300,
+          height: 180
+        }
+      })
+    ).toMatchObject({
+      format: "jpeg",
+      quality: 80
+    });
+  });
+
+  it("rejects png quality overrides", () => {
+    expect(() =>
+      captureScreenshotRequestSchema.parse({
+        format: "png",
+        quality: 80
+      })
+    ).toThrowError(/quality is only supported for jpeg screenshots/);
   });
 
   it("backfills runtime defaults for older snapshots", () => {

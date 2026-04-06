@@ -130,6 +130,10 @@ function Bridgey.getDocument(self: Client, sessionId: string): (boolean, any)
 	return self:_request("GET", "/sessions/" .. sessionId .. "/document", nil)
 end
 
+function Bridgey.captureScreenshot(self: Client, sessionId: string, options: any?): (boolean, any)
+	return self:_request("POST", "/sessions/" .. sessionId .. "/screenshot", options)
+end
+
 function Bridgey.closeSession(self: Client, sessionId: string): (boolean, any)
 	return self:_request("DELETE", "/sessions/" .. sessionId, nil)
 end

@@ -50,6 +50,7 @@ describeIntegration("BrowserSessionManager integration", () => {
     const staticHtml = await fixture("static.html");
     const spaHtml = await fixture("spa.html");
     const loginHtml = await fixture("login.html");
+    const interactiveHtml = await fixture("interactive.html");
 
     server = createServer(async (request: IncomingMessage, response: ServerResponse) => {
       if (!request.url) {
@@ -72,6 +73,11 @@ describeIntegration("BrowserSessionManager integration", () => {
 
       if (request.method === "GET" && requestUrl.pathname === "/login") {
         sendHtml(response, loginHtml);
+        return;
+      }
+
+      if (request.method === "GET" && requestUrl.pathname === "/interactive") {
+        sendHtml(response, interactiveHtml);
         return;
       }
 
@@ -296,4 +302,75 @@ describeIntegration("BrowserSessionManager integration", () => {
       code: "invalid_selector"
     });
   });
+
+  it(
+    "supports viewport clicks, scrolling, and screenshots",
+    async () => {
+      const session = await manager.createSession();
+      const initial = await manager.runActions(session.sessionId, [
+        {
+          type: "navigate",
+          url: `${baseUrl}/interactive`
+        },
+        {
+          type: "wait_for_selector",
+          selector: "#point-target"
+        }
+      ]);
+
+      const pointTarget = findDomNodeById(initial.snapshot.dom, "#point-target");
+
+      expect(pointTarget?.render.layout.width ?? 0).toBeGreaterThan(0);
+      expect(pointTarget?.render.layout.height ?? 0).toBeGreaterThan(0);
+
+      const clickResult = await manager.runActions(session.sessionId, [
+        {
+          type: "click_point",
+          x:
+            (pointTarget?.render.layout.x ?? 0) +
+            (pointTarget?.render.layout.width ?? 0) / 2 -
+            initial.snapshot.runtime.viewport.scrollX,
+          y:
+            (pointTarget?.render.layout.y ?? 0) +
+            (pointTarget?.render.layout.height ?? 0) / 2 -
+            initial.snapshot.runtime.viewport.scrollY
+        },
+        {
+          type: "wait_for_selector",
+          selector: "#result[data-state='clicked']"
+        },
+        {
+          type: "scroll",
+          deltaY: 900
+        },
+        {
+          type: "wait_for_selector",
+          selector: "#scroll-state[data-state='scrolled']"
+        }
+      ]);
+
+      const clickedResult = findDomNodeById(clickResult.snapshot.dom, "#result");
+
+      expect(clickedResult?.text?.includes("Point click received")).toBe(true);
+      expect(clickResult.snapshot.runtime.viewport.scrollY).toBeGreaterThan(300);
+
+      const screenshot = await manager.captureScreenshot(session.sessionId, {
+        format: "png",
+        clip: {
+          x: 0,
+          y: 0,
+          width: 320,
+          height: 240
+        }
+      });
+
+      expect(screenshot.screenshot.format).toBe("png");
+      expect(screenshot.screenshot.mimeType).toBe("image/png");
+      expect(screenshot.screenshot.base64.length).toBeGreaterThan(100);
+      expect(screenshot.screenshot.byteLength).toBeGreaterThan(100);
+      expect(screenshot.screenshot.width).toBe(320);
+      expect(screenshot.screenshot.height).toBe(240);
+    },
+    15_000
+  );
 });

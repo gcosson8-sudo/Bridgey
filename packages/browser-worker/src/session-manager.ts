@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 
 import {
   type Action,
+  type CaptureScreenshotRequest,
+  type CaptureScreenshotResponse,
   type CreateSessionResponse,
   type CredentialPayload,
   type DocumentSnapshot,
@@ -168,6 +170,28 @@ export class BrowserSessionManager {
             break;
           }
 
+          case "click_point": {
+            const response = await this.runNavigationAwareAction(
+              session.page,
+              action.timeoutMs,
+              async () => {
+                const clickOptions: NonNullable<Parameters<Page["mouse"]["click"]>[2]> = {
+                  button: action.button ?? "left",
+                  clickCount: action.clickCount ?? 1
+                };
+
+                if (action.delayMs !== undefined) {
+                  clickOptions.delay = action.delayMs;
+                }
+
+                await session.page.mouse.click(action.x, action.y, clickOptions);
+              }
+            );
+
+            session.lastStatus = response?.status() ?? session.lastStatus;
+            break;
+          }
+
           case "type": {
             const value = this.resolveTypeValue(action.value, action.credentialField, credential);
             const locator = session.page.locator(action.selector);
@@ -217,6 +241,22 @@ export class BrowserSessionManager {
             });
             break;
           }
+
+          case "scroll": {
+            if (action.x !== undefined || action.y !== undefined) {
+              await session.page.mouse.move(action.x ?? 0, action.y ?? 0);
+            }
+
+            await session.page.mouse.wheel(action.deltaX ?? 0, action.deltaY ?? 0);
+            await session.page.waitForLoadState("networkidle", {
+              timeout: action.timeoutMs ?? 1_000
+            }).catch((error) => {
+              if (!(error instanceof errors.TimeoutError)) {
+                throw error;
+              }
+            });
+            break;
+          }
         }
 
         await this.enforceCurrentPageAllowlisted(session);
@@ -246,6 +286,72 @@ export class BrowserSessionManager {
     return {
       session: this.toSessionState(session),
       snapshot: session.lastSnapshot
+    };
+  }
+
+  public async captureScreenshot(
+    sessionId: string,
+    options: CaptureScreenshotRequest = {}
+  ): Promise<CaptureScreenshotResponse> {
+    const session = await this.requireSession(sessionId);
+    await this.enforceCurrentPageAllowlisted(session);
+
+    const format = options.format ?? "png";
+    const screenshotOptions: NonNullable<Parameters<Page["screenshot"]>[0]> = {
+      type: format,
+      fullPage: options.fullPage ?? false
+    };
+
+    if (format === "jpeg" && options.quality !== undefined) {
+      screenshotOptions.quality = options.quality;
+    }
+
+    if (options.clip) {
+      screenshotOptions.clip = options.clip;
+    }
+
+    if (options.scale) {
+      screenshotOptions.scale = options.scale;
+    }
+
+    if (options.omitBackground !== undefined) {
+      screenshotOptions.omitBackground = options.omitBackground;
+    }
+
+    const buffer = await session.page.screenshot(screenshotOptions);
+    const dimensions = await this.resolveScreenshotDimensions(session, options);
+    const capturedAt = new Date().toISOString();
+
+    session.lastSnapshot = await captureDocumentSnapshot(session.page, {
+      status: session.lastStatus,
+      redirectedFrom: session.redirectedFrom
+    });
+    session.lastActivityAt = new Date();
+    session.expiresAt = new Date(session.lastActivityAt.getTime() + this.options.sessionTtlMs);
+
+    await this.store.touchSession(
+      session.sessionId,
+      session.expiresAt.toISOString(),
+      session.lastActivityAt.toISOString()
+    );
+    await this.store.updateSessionSnapshot(session.sessionId, session.lastSnapshot);
+    await this.store.recordAuditEvent(session.sessionId, "session.screenshot_captured", {
+      format,
+      fullPage: options.fullPage ?? false,
+      clip: options.clip ?? null
+    });
+
+    return {
+      session: this.toSessionState(session),
+      screenshot: {
+        mimeType: format === "jpeg" ? "image/jpeg" : "image/png",
+        format,
+        base64: buffer.toString("base64"),
+        byteLength: buffer.byteLength,
+        width: dimensions.width,
+        height: dimensions.height,
+        capturedAt
+      }
     };
   }
 
@@ -426,6 +532,60 @@ export class BrowserSessionManager {
     return await navigation;
   }
 
+  private async resolveScreenshotDimensions(
+    session: LiveSession,
+    options: CaptureScreenshotRequest
+  ): Promise<{ width: number; height: number }> {
+    if (options.clip) {
+      return {
+        width: Math.max(1, Math.round(options.clip.width)),
+        height: Math.max(1, Math.round(options.clip.height))
+      };
+    }
+
+    if (options.fullPage) {
+      const dimensions = await session.page.evaluate(() => {
+        const doc = document.documentElement;
+        const body = document.body;
+
+        return {
+          width: Math.max(
+            window.innerWidth,
+            doc?.scrollWidth ?? 0,
+            doc?.clientWidth ?? 0,
+            body?.scrollWidth ?? 0,
+            body?.clientWidth ?? 0
+          ),
+          height: Math.max(
+            window.innerHeight,
+            doc?.scrollHeight ?? 0,
+            doc?.clientHeight ?? 0,
+            body?.scrollHeight ?? 0,
+            body?.clientHeight ?? 0
+          )
+        };
+      });
+
+      return {
+        width: Math.max(1, Math.round(dimensions.width)),
+        height: Math.max(1, Math.round(dimensions.height))
+      };
+    }
+
+    const viewportSize = session.page.viewportSize();
+
+    if (viewportSize) {
+      return viewportSize;
+    }
+
+    const viewport = session.lastSnapshot?.runtime.viewport;
+
+    return {
+      width: Math.max(1, Math.round(viewport?.width ?? 1280)),
+      height: Math.max(1, Math.round(viewport?.height ?? 720))
+    };
+  }
+
   private async enforceCurrentPageAllowlisted(session: LiveSession): Promise<void> {
     const allowlist = await this.store.listAllowlistDomains();
     const currentUrl = session.page.url();
@@ -461,7 +621,12 @@ export class BrowserSessionManager {
     }
 
     if (error instanceof errors.TimeoutError) {
-      if (action.type !== "navigate") {
+      if (
+        action.type === "click" ||
+        action.type === "type" ||
+        action.type === "submit" ||
+        action.type === "wait_for_selector"
+      ) {
         return new BridgeyError("invalid_selector", 400, "Element was not found before timeout", {
           action
         });

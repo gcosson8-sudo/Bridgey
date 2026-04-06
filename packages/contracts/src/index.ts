@@ -239,9 +239,21 @@ export const navigateActionSchema = z.object({
   timeoutMs: z.number().int().positive().max(60_000).optional()
 });
 
+export const mouseButtonSchema = z.enum(["left", "right", "middle"]);
+
 export const clickActionSchema = z.object({
   type: z.literal("click"),
   selector: z.string().min(1),
+  timeoutMs: z.number().int().positive().max(60_000).optional()
+});
+
+export const clickPointActionSchema = z.object({
+  type: z.literal("click_point"),
+  x: z.number().finite().min(0),
+  y: z.number().finite().min(0),
+  button: mouseButtonSchema.optional(),
+  clickCount: z.number().int().positive().max(5).optional(),
+  delayMs: z.number().int().min(0).max(5_000).optional(),
   timeoutMs: z.number().int().positive().max(60_000).optional()
 });
 
@@ -274,12 +286,28 @@ export const waitForSelectorActionSchema = z.object({
   timeoutMs: z.number().int().positive().max(60_000).optional()
 });
 
+export const scrollActionSchema = z
+  .object({
+    type: z.literal("scroll"),
+    x: z.number().finite().min(0).optional(),
+    y: z.number().finite().min(0).optional(),
+    deltaX: z.number().finite().optional(),
+    deltaY: z.number().finite().optional(),
+    timeoutMs: z.number().int().positive().max(60_000).optional()
+  })
+  .refine(
+    (action) => (action.deltaX ?? 0) !== 0 || (action.deltaY ?? 0) !== 0,
+    "scroll actions require a deltaX or deltaY"
+  );
+
 export const actionSchema = z.union([
   navigateActionSchema,
   clickActionSchema,
+  clickPointActionSchema,
   typeActionSchema,
   submitActionSchema,
-  waitForSelectorActionSchema
+  waitForSelectorActionSchema,
+  scrollActionSchema
 ]);
 
 export type Action = z.infer<typeof actionSchema>;
@@ -318,6 +346,50 @@ export const runActionsResponseSchema = z.object({
 });
 
 export type RunActionsResponse = z.infer<typeof runActionsResponseSchema>;
+
+export const screenshotClipSchema = z.object({
+  x: z.number().finite().min(0),
+  y: z.number().finite().min(0),
+  width: z.number().finite().positive(),
+  height: z.number().finite().positive()
+});
+
+export type ScreenshotClip = z.infer<typeof screenshotClipSchema>;
+
+export const captureScreenshotRequestSchema = z
+  .object({
+    format: z.enum(["png", "jpeg"]).optional(),
+    quality: z.number().int().min(1).max(100).optional(),
+    fullPage: z.boolean().optional(),
+    clip: screenshotClipSchema.optional(),
+    scale: z.enum(["css", "device"]).optional(),
+    omitBackground: z.boolean().optional()
+  })
+  .refine(
+    (request) => request.format === "jpeg" || request.quality === undefined,
+    "quality is only supported for jpeg screenshots"
+  );
+
+export type CaptureScreenshotRequest = z.infer<typeof captureScreenshotRequestSchema>;
+
+export const screenshotArtifactSchema = z.object({
+  mimeType: z.enum(["image/png", "image/jpeg"]),
+  format: z.enum(["png", "jpeg"]),
+  base64: z.string(),
+  byteLength: z.number().int().min(0),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+  capturedAt: z.string().datetime()
+});
+
+export type ScreenshotArtifact = z.infer<typeof screenshotArtifactSchema>;
+
+export const captureScreenshotResponseSchema = z.object({
+  session: sessionStateSchema,
+  screenshot: screenshotArtifactSchema
+});
+
+export type CaptureScreenshotResponse = z.infer<typeof captureScreenshotResponseSchema>;
 
 export const getDocumentResponseSchema = z.object({
   session: sessionStateSchema,
